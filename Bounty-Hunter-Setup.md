@@ -1,12 +1,22 @@
-# Web3 Bug Bounty Hunter Setup – Scripts Prontos
+# Web3 Security Toolkit
 
-## 📁 Estrutura de Diretórios
+Professional smart contract security analysis framework.  
+Focus on automation, reproducibility, and professional bug bounty reporting.
 
-```bash
-BUGBASE="$HOME/Library/Mobile Documents/com~apple~CloudDocs/BugBounty"
+## Structure
+- `scripts/` → generic tools
+- `templates/` → report & PoC templates
+- `docs/` → public documentation
+- `reports/` → private drafts and submissions
+- `targets/` → active protocol analyses
+- `earnings/` → private results
+- `private/` → notes & experiments
 
-mkdir -p "$BUGBASE"/{targets,reports,pocs,tools,scripts,templates,research,earnings,logs}
-mkdir -p "$BUGBASE"/targets/{active,archive,monitoring}
-mkdir -p "$BUGBASE"/reports/{submitted,accepted,rejected,draft}
-mkdir -p "$BUGBASE"/pocs/{foundry,hardhat,custom}
-mkdir -p "$BUGBASE"/research/{vulns,techniques,writeups}
+## Guides
+- `Bounty-Hunter-Setup.md` → environment setup  
+- `BUGBOUNTY-PLAN-100K.md` → roadmap to first $100k  
+- `Onde-Estão-os-Milhões.md` → target hunting strategy  
+
+---
+
+⚠️ **Security Note**: keep `reports/`, `targets/`, `earnings/`, `.env` out of public repos.
