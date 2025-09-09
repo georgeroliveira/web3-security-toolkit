@@ -1,8 +1,32 @@
-# Alvos de exemplo — edite/conte seus reais
-- name: alchemix-transmuter
-  chain: optimism
-  tvl_usd: 0
-  bounty_url: "https://immunefi.com"
-  repo: "https://github.com/"
-  rpc_env: "RPC_URL"     # variável usada no PoC
-  notes: ["test target", "keep template minimal"]
+# === Example Targets ===
+# Cada item representa um protocolo caçado.
+
+- name: Aave
+  chain: ethereum
+  tvl_usd: 8000000000
+  bounty_url: "https://immunefi.com/bounty/aave"
+  last_audit: "2024-07-10"
+  rpc_url: "https://eth.llamarpc.com"
+  notes: >
+    Lending protocol, sensível a oráculos. 
+    Prioridade máxima.
+
+- name: Curve
+  chain: ethereum
+  tvl_usd: 2200000000
+  bounty_url: "https://immunefi.com/bounty/curve"
+  last_audit: "2023-12-15"
+  rpc_url: "https://rpc.ankr.com/eth"
+  notes: >
+    AMM estável. Foco em manipulação de preço 
+    e reentrancy cross-function.
+
+- name: Wormhole
+  chain: solana
+  tvl_usd: 600000000
+  bounty_url: "https://immunefi.com/bounty/wormhole"
+  last_audit: "2024-05-22"
+  rpc_url: "https://api.mainnet-beta.solana.com"
+  notes: >
+    Bridge cross-chain. Possíveis falhas de 
+    verificação de assinatura.

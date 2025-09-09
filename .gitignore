@@ -21,6 +21,21 @@ out/
 cache/
 artifacts/
 dist/
+.foundry/
+
+# ────────────────────────────────
+# PYTHON
+# ────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ────────────────────────────────
+# REPORTS EXPORTS
+# ────────────────────────────────
+reports/*.pdf
+reports/*.md
+!reports/templates/
 
 # ────────────────────────────────
 # IDE / OS
