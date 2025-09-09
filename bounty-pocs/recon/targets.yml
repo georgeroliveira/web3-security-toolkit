@@ -1,0 +1,8 @@
+# Alvos de exemplo — edite/conte seus reais
+- name: alchemix-transmuter
+  chain: optimism
+  tvl_usd: 0
+  bounty_url: "https://immunefi.com"
+  repo: "https://github.com/"
+  rpc_env: "RPC_URL"     # variável usada no PoC
+  notes: ["test target", "keep template minimal"]
