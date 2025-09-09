@@ -1,0 +1,42 @@
+name: Recon Pipeline
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # roda todo dia às 06:00 UTC
+  workflow_dispatch:       # também permite rodar manual pelo botão "Run workflow"
+
+jobs:
+  recon:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pyyaml
+          sudo apt-get update && sudo apt-get install -y jq make
+
+      - name: Run recon pipeline
+        run: |
+          make recon
+
+      - name: Commit updated JSONs
+        run: |
+          git config user.name "Recon Bot"
+          git config user.email "recon-bot@users.noreply.github.com"
+
+          if ! git diff --quiet bounty-pocs/recon/*.json; then
+            git add bounty-pocs/recon/*.json
+            git commit -m "chore(recon): update enriched targets and programs [skip ci]"
+            git push
+          else
+            echo "No changes in recon data, skipping commit."
+          fi
