@@ -1,4 +1,6 @@
-# SENSITIVE
+# ────────────────────────────────
+# SENSITIVE / PRIVATE
+# ────────────────────────────────
 .env
 .env.*
 *.key
@@ -10,7 +12,9 @@ reports/draft/
 reports/submitted/
 earnings/
 
+# ────────────────────────────────
 # BUILD / TOOLS
+# ────────────────────────────────
 node_modules/
 build/
 out/
@@ -18,14 +22,18 @@ cache/
 artifacts/
 dist/
 
+# ────────────────────────────────
 # IDE / OS
+# ────────────────────────────────
 .vscode/
 .idea/
 *.swp
 .DS_Store
 Thumbs.db
 
+# ────────────────────────────────
 # LOGS
+# ────────────────────────────────
 *.log
 logs/
 debug.log
@@ -33,7 +41,8 @@ npm-debug.log
 yarn-debug.log
 yarn-error.log
 
+# ────────────────────────────────
 # PERSONAL NOTES
+# ────────────────────────────────
 notes.md
 TODO.md
-
