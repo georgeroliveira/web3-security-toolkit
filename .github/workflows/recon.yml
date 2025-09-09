@@ -36,7 +36,8 @@ jobs:
           if ! git diff --quiet bounty-pocs/recon/*.json; then
             git add bounty-pocs/recon/*.json
             git commit -m "chore(recon): update enriched targets and programs [skip ci]"
-            git push
+            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
           else
             echo "No changes in recon data, skipping commit."
           fi
+
