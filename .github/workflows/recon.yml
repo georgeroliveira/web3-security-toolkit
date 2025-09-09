@@ -2,8 +2,11 @@ name: Recon Pipeline
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # roda todo dia às 06:00 UTC
-  workflow_dispatch:       # também permite rodar manual pelo botão "Run workflow"
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # dá permissão de push com GITHUB_TOKEN
 
 jobs:
   recon:
