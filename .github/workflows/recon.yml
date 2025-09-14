@@ -57,7 +57,7 @@ jobs:
       - name: Generate recon summary
         run: |
           mkdir -p reports
-          python3 scripts/gen_report.py bounty-pocs/recon/targets.enriched.json > reports/recon-summary.md
+          python3 bounty-pocs/scripts/gen_report.py bounty-pocs/recon/targets.enriched.json > reports/recon-summary.md
 
       - name: Commit recon summary
         run: |
