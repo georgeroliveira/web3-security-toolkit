@@ -2,12 +2,12 @@ name: Recon Pipeline
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # Run every day at 09:00 BRT (12:00 UTC)
-    - cron: "0 18 * * *"   # Run every day at 15:00 BRT (18:00 UTC)
+    - cron: "0 12 * * *"   # manhã (09h BRT)
+    - cron: "0 18 * * *"   # tarde (15h BRT)
   workflow_dispatch:
 
 permissions:
-  contents: write   # dá permissão de push com GITHUB_TOKEN
+  contents: write
 
 jobs:
   recon:
@@ -16,14 +16,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
-
-      # Cache para acelerar reinstalação de dependências Python
-      - uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -52,29 +44,4 @@ jobs:
           else
             echo "No changes in recon data, skipping commit."
           fi
-
-      # Novo step: gerar relatório Markdown legível
-      - name: Generate recon summary
-        run: |
-          mkdir -p reports
-          python3 bounty-pocs/scripts/gen_report.py bounty-pocs/recon/targets.enriched.json > reports/recon-summary.md
-
-      - name: Commit recon summary
-        run: |
-          if ! git diff --quiet reports/recon-summary.md; then
-            git add reports/recon-summary.md
-            git commit -m "chore(recon): update recon summary [skip ci]"
-            git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
-          else
-            echo "No changes in recon summary."
-          fi
-
-      # Artefatos disponíveis para download no GitHub Actions
-      - name: Upload recon artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: recon-data
-          path: |
-            bounty-pocs/recon/*.json
-            reports/recon-summary.md
 
