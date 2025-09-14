@@ -2,7 +2,8 @@ name: Recon Pipeline
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    - cron: "0 12 * * *"   # Run every day at 09:00 BRT (12:00 UTC)
+    - cron: "0 18 * * *"   # Run every day at 15:00 BRT (18:00 UTC)
   workflow_dispatch:
 
 permissions:
@@ -55,6 +56,7 @@ jobs:
       # Novo step: gerar relatório Markdown legível
       - name: Generate recon summary
         run: |
+          mkdir -p reports
           python3 scripts/gen_report.py bounty-pocs/recon/targets.enriched.json > reports/recon-summary.md
 
       - name: Commit recon summary
