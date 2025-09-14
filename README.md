@@ -1,93 +1,119 @@
+# 🐺 Bug Bounty Machine – Guia Definitivo
 
-# Setup Bug Bounty – Linha do Tempo Explicada
+## 📌 Contexto
+
+* Projeto: **web3-security-toolkit / bounty-pocs**
+* Objetivo: Criar uma **máquina de caçar bug bounties** em protocolos DeFi/Web3
+* Ferramentas principais: Foundry, Anvil, Cast, Python, Bash, GitHub Actions
 
 ---
 
-## 1. Preparação do ambiente
+# 🔹 Setup Completo
 
-### O que foi feito
+## 1. Instalação do ambiente
+
 ```bash
-brew install foundry rust node jq coreutils
+brew install foundry rust node jq coreutils python3 git gnu-sed
 foundryup
-````
+pip3 install pyyaml
+```
 
-Ferramentas disponíveis:
+Ferramentas:
 
 * `forge` → compila e testa contratos
-* `anvil` → simula/forka blockchains
+* `anvil` → simula blockchains locais
 * `cast` → interage com a blockchain
-
-### Por que importa
-
-Essas três ferramentas são o **kit essencial do hunter**.
-Permitem controle total sobre a blockchain, direto no seu laptop.
 
 ---
 
 ## 2. Estrutura do repositório
 
 ```
-src/targets/      # contratos exploit
-test/targets/     # testes dos exploits
-targets/          # docs README por alvo
-scripts/          # automações (fork, run-tests, new-target)
-reports/          # relatórios (draft/submitted)
-research/         # notas e análises
-private/          # itens privados
-credentials/      # RPCs, chaves, segredos
+bounty-pocs/
+  ├─ src/targets/          # exploits e interfaces
+  ├─ test/targets/         # testes Foundry
+  ├─ recon/                # scripts de recon
+  ├─ reports/              # relatórios
+  ├─ research/             # análises
+  ├─ private/, credentials/ # dados sensíveis
+  └─ scripts/              # automações
 ```
-
-### Por que importa
-
-Organização acelera o fluxo.
-Cada alvo fica isolado, documentado e replicável.
 
 ---
 
 ## 3. Proteção de arquivos sensíveis
 
-`.gitignore` configurado para ignorar:
+Arquivo `.gitignore` deve conter:
 
-* `.env`
-* `private/`, `credentials/`
-* `reports/`
-* `out/`, `cache/`
-* `.DS_Store`
-
-### Por que importa
-
-Evita expor chaves privadas e RPCs pagos.
-Protege credibilidade e segurança.
-
----
-
-## 4. Configuração de RPCs
-
-Arquivo `.env`:
-
-```ini
-RPC_MAINNET=...
-RPC_OPTIMISM=...
-RPC_ARBITRUM=...
+```
+.env
+private/
+credentials/
+reports/
+out/
+cache/
+.DS_Store
 ```
 
-### Por que importa
+---
 
-RPC é a ponte entre fork e blockchain real.
-Permite reproduzir o **estado exato da rede**.
+## 4. Recon Pipeline
+
+Scripts:
+
+* `refresh-tvl.sh` → lê `targets.yml`, gera `targets.enriched.json`
+* `fetch-programs.sh` → enriquece com dados de bounty
+
+Execução:
+
+```bash
+make recon
+```
 
 ---
 
-## 5. Arquivo `foundry.toml`
+## 5. Exemplo de `targets.yml`
+
+```yaml
+- name: Curve
+  chain: ethereum
+  tvl_usd: 2200000000
+  bounty_url: https://immunefi.com/bounty/curve
+  last_audit: "2023-12-15"
+  rpc_url: ${RPC_MAINNET}
+```
+
+---
+
+## 6. CI/CD (GitHub Actions)
+
+1. Criar **Personal Access Token (classic)** com permissão `repo`.
+2. Salvar no GitHub Secrets como `PAT_TOKEN`.
+3. Workflow usa:
+
+```yaml
+git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+```
+
+---
+
+## 7. Foundry Setup
+
+Arquivo `foundry.toml`:
 
 ```toml
 [profile.default]
 src = "src"
+test = "bounty-pocs/test"
 out = "out"
 libs = ["lib"]
 ffi = true
 optimizer = true
 optimizer_runs = 200
+
+remappings = [
+  "forge-std/=lib/forge-std/src/"
+]
 
 [rpc_endpoints]
 mainnet  = "${RPC_MAINNET}"
@@ -95,183 +121,75 @@ optimism = "${RPC_OPTIMISM}"
 arbitrum = "${RPC_ARBITRUM}"
 ```
 
-### Por que importa
-
-Centraliza configs, conecta ao `.env`
-Facilita troca de rede com um comando.
-
----
-
-## 6. Scripts de automação
-
-* **`fork.sh`**
-
-  ```bash
-  BLOCK=123456789 ./scripts/fork.sh optimism
-  ```
-* **`run-tests.sh`** → roda testes no fork (valida chain-id 10)
-* **`new-target.sh`** → scaffolding automático de exploits
-
-### Por que importa
-
-Automação reduz fricção.
-Novo alvo = 3 comandos → contrato, teste e README prontos.
-
----
-
-## 7. Dependências
-
-Instalado:
+Instalação de libs:
 
 ```bash
 forge install foundry-rs/forge-std
 ```
 
-### Por que importa
-
-* Acesso a `Test.sol` (asserts/logs)
-* Padrão reconhecido em auditorias e bug bounties
-
 ---
 
-## 8. Primeiro alvo: Alchemix TransmuterEth
+## 8. Configuração de RPCs
 
-Criado com:
+Arquivo `.env`:
+
+```ini
+# ==== RPC URLs ====
+RPC_MAINNET=https://eth-mainnet.g.alchemy.com/v2/<API_KEY>
+RPC_OPTIMISM=https://opt-mainnet.g.alchemy.com/v2/<API_KEY>
+RPC_ARBITRUM=https://arb-mainnet.g.alchemy.com/v2/<API_KEY>
+
+# ==== API Keys (opcional) ====
+ETHERSCAN_API_KEY=
+POLYGONSCAN_API_KEY=
+ARBISCAN_API_KEY=
+```
+
+Carregar variáveis:
 
 ```bash
-./scripts/new-target.sh alchemix-transmuter
+source .env
 ```
 
-Gerou:
-
-* `Exploit.sol`
-* `Exploit.t.sol`
-* `README.md`
-
-### Por que importa
-
-Primeiro caso real em Optimism.
-Ambiente de caça vivo, não apenas exemplo.
-
 ---
 
-## 9. Teste de sanidade
+## 9. Exploits e Testes
 
-Exemplo:
-
-```solidity
-address constant TARGET = 0xb7C4250f83289ff3Ea9f21f01AAd0b02fb19491a;
-```
-
-Testa:
-
-* `chainid`
-* endereço do contrato
-* saldo ETH
-
-### Por que importa
-
-Confirma fork correto, contrato correto, snapshot correto.
-
----
-
-## 10. Debug avançado: Proxy e Buffer
-
-* TransmuterEth = **proxy EIP-1967**
-* Aponta para um `buffer()` que guarda fundos
-* Buffer também é proxy
-* Saldo encontrado: \~**1.302 WETH**
-
-### Por que importa
-
-Investigar além do “saldo 0” → achamos onde os fundos realmente estão.
-Esse é o diferencial de hunters de elite.
-
----
-
-# Estado Atual
-
-* Ambiente instalado ✔️
-* Repositório estruturado ✔️
-* RPCs configurados ✔️
-* Scripts de automação funcionando ✔️
-* Primeiro alvo scaffoldado ✔️
-* Sanity test validado ✔️
-* Proxy e buffer investigados ✔️
-* **1.302 WETH localizados no buffer ✔️**
-
----
-
-# Próximo Objetivo
-
-* Mapear **quem consegue mover os WETH** do buffer (owner, router, roles).
-* Escrever o **`test_Exploit()`** com fluxo onde atacante ganha.
-
----
-
-# Smoke Tests Rápidos
+* Criar exploits em `src/targets/`
+* Testes em `test/targets/` com `Exploit.t.sol`
+* Rodar com:
 
 ```bash
-# Fork da OP no bloco desejado
-BLOCK=123456789 ./scripts/fork.sh optimism
-
-# Sanidade do RPC
-cast chain --rpc-url http://127.0.0.1:8545
-cast rpc eth_chainId --rpc-url http://127.0.0.1:8545
-
-# Testes no fork
-RPC_URL=http://127.0.0.1:8545 BLOCK=123456789 ./scripts/run-tests.sh
+forge test --fork-url $RPC_MAINNET --fork-block-number <BLOCK> -vvvv
 ```
 
 ---
 
-# Upgrades Recomendados
+## 10. Próximos Passos
 
-* **Snapshot rápido no Anvil**: usar `--no-rate-limit --auto-impersonate` no `fork.sh`.
-* **Guardas de CI local**: script `check.sh` rodando build + sanity + teste curto antes de commit.
+* Corrigir endereços de targets no Alchemix
+* Expandir exploit no Curve com `deal()` para seed de DAI/USDC/USDT
+* Testar Wormhole com verificação de assinaturas/replays
+* Integrar geração automática de relatórios
 
 ---
+
+# 🚀 Comandos Rápidos
+
+```bash
+# Recon pipeline
+make recon
+
+# Fork mainnet em bloco específico
+forge test --fork-url $RPC_MAINNET --fork-block-number <BLOCK> -vvvv
+
+# Rodar só Curve
+forge test -vvvv --match-path test/targets/curve/Exploit.t.sol
 ```
- 🎯 Target escolhido
-        │
-        ▼
-┌─────────────────────┐
-│ research/targets/   │  ← Estudo inicial (README, notas, blocos)
-└─────────────────────┘
-        │
-        ▼
-┌─────────────────────┐
-│ src/targets/        │  ← Exploit.sol + interfaces mínimas
-└─────────────────────┘
-        │
-        ▼
-┌─────────────────────┐
-│ test/targets/       │  ← Testes Foundry (Sanity + Exploit.t.sol)
-└─────────────────────┘
-        │
-        ▼
-⚙️ forge test / anvil fork
-        │
-        ▼
-┌─────────────────────┐
-│ out/                │  ← Artefatos (ABI, bytecode, traces, logs)
-└─────────────────────┘
-        │
-        ▼
-📑 Validação automática (logs + balances)
-        │
-        ▼
-┌─────────────────────┐
-│ reports/draft/      │  ← Relatório inicial (auto-gerado)
-└─────────────────────┘
-        │
-        ▼
-👨‍💻 Revisão humana + IA (Guardião + Redator)
-        │
-        ▼
-┌─────────────────────┐
-│ reports/submitted/  │  ← Relatório final enviado (Immunefi)
-└─────────────────────┘
-        │
-        ▼
-💰 Recompensa no bolso
+
+---
+
+
+> “Cada linha de código tem um preço — encontre antes que outro ache.”
+
+---
