@@ -1,3 +1,4 @@
+
 # 🐺 Bug Bounty Machine – Guia Definitivo
 
 ## 📌 Contexto
@@ -16,7 +17,7 @@
 brew install foundry rust node jq coreutils python3 git gnu-sed
 foundryup
 pip3 install pyyaml
-```
+````
 
 Ferramentas:
 
@@ -189,7 +190,133 @@ forge test -vvvv --match-path test/targets/curve/Exploit.t.sol
 
 ---
 
-
 > “Cada linha de código tem um preço — encontre antes que outro ache.”
 
 ---
+
+# 🔥 PoC – Aave Flashloan
+
+## 📌 Contexto
+
+Exploit de prova de conceito para **flashloan na Aave V2** usando DAI.
+
+## 🔹 Passos
+
+1. Identificação do alvo no `targets.yml` → Aave V2.
+2. Criação do contrato `AaveExploit.sol` com:
+
+   * Interfaces `ILendingPool`, `IFlashLoanReceiver`, `IERC20`.
+   * Endereços mainnet da LendingPool e do DAI.
+   * Função `attack()` pedindo **1.000.000 DAI**.
+3. Implementação do callback `executeOperation`:
+
+   * Recebeu o empréstimo.
+   * Logou `amount` e `premium`.
+   * Aprovou o pool para recolher `amount + premium`.
+4. Criação do teste `AaveOracleTest.t.sol` para rodar o exploit.
+5. Execução com:
+
+   ```bash
+   forge test --fork-url $RPC_MAINNET --fork-block-number 20750000 -vvvv \
+     --match-path test/targets/aave/AaveOracleTest.t.sol
+   ```
+
+## ✅ Resultado
+
+* **Saldo inicial**: 1.000 DAI
+* **Flashloan recebido**: 1.000.000 DAI
+* **Premium (taxa)**: 900 DAI
+* **Saldo final**: 100 DAI
+* **Status**: \[PASS]
+
+Essa PoC demonstra a capacidade de alavancar liquidez massiva instantânea no Aave como base para exploits mais complexos.
+
+---
+Entendi, George ⚡
+Você já construiu algo que **99% dos hunters nem chegam perto**: um ambiente **reprodutível**, capaz de simular forks, rodar exploits e documentar tudo em reports.
+
+Agora a pergunta é: **como transformar isso em \$\$ em bug bounty real?**
+Vou te dar um **mapa prático**, sem firulas.
+
+---
+
+# 🚀 Roteiro de Caça Real – Bug Bounty DeFi
+
+## 1. **Escolha o Alvo Certo**
+
+* Vá em **[Immunefi](https://immunefi.com/explore/)** e filtre por:
+
+  * 🏦 TVL alto (Curve, Aave, Lido, Wormhole, Arbitrum…)
+  * 💰 Recompensa máxima alta (>= **\$1M USD**)
+  * 🔄 Protocolos com oráculos, bridges ou flashloans (maior superfície de ataque).
+
+---
+
+## 2. **Recon Inteligente**
+
+Você já tem `targets.yml`. Agora:
+
+* Pegue a bounty page → copie os **contratos escopados**.
+* Enriquecer no `targets.enriched.json` (com TVL, audits, etc).
+* Rodar seu `make recon` para organizar.
+
+💡 Saída: você terá uma lista **clara** de contratos-alvo com endereços e RPCs prontos para o fork.
+
+---
+
+## 3. **Reprodução em Fork**
+
+Exatamente como você fez com Aave:
+
+```bash
+forge test --fork-url $RPC_MAINNET --fork-block-number <BLOCK> -vvvv
+```
+
+* Foque em:
+
+  * **Oracles** (manipulação de preço com Curve/Uniswap pools)
+  * **Bridges** (assinaturas, mensagens cross-chain, replay attacks)
+  * **Flashloans** (liquidações forçadas, colaterais inflados).
+
+---
+
+## 4. **Criar PoCs**
+
+Formato igual ao `reports/aave_poc.md`:
+
+* Setup → alvo, bloco, contratos.
+* Execução → saldo antes/depois, trace do exploit.
+* Conclusão → “se fosse explorável, dreno seria de X”.
+
+💡 Mesmo que não seja bug, o treino gera **biblioteca de PoCs reutilizáveis**.
+
+---
+
+## 5. **Escalada para \$\$\$**
+
+Quando achar algo que **realmente quebra invariantes**:
+
+* Confirme em 2 forks diferentes (outro bloco, outro RPC).
+* Documente em **Markdown + código exploit**.
+* Envie no **formulário oficial Immunefi** (privado).
+
+💰 Se for válido, você recebe a recompensa direto na carteira (em stablecoin geralmente).
+
+---
+
+# ⚡ Dicas de Sobrevivência
+
+1. **Foque em poucos alvos, mas profundos.**
+   – Curve, Aave, Lido → são minas de ouro históricas.
+2. **Automatize scans.**
+   – Use seu pipeline para rodar testes diariamente.
+3. **Reporte rápido.**
+   – O 1º que reporta leva o bounty.
+4. **Documente tudo.**
+   – Immunefi adora reportes com PoC clara (igual seu `reports/aave_poc.md`).
+
+---
+
+👉 Você já tem a **infra**.
+O próximo passo é **pegar 1 alvo real do Immunefi**, preparar seu `targets.yml`, rodar um fork e começar a testar manipulação de oráculos / flashloans até quebrar algo.
+
