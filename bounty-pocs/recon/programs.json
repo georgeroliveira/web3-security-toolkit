@@ -1,6 +1,6 @@
 {
-  "generated_at": 1757893881,
-  "generated_at_iso": "2025-09-14T23:51:21Z",
+  "generated_at": 1758196976,
+  "generated_at_iso": "2025-09-18T12:02:56Z",
   "stats": {
     "count_targets": 4,
     "count_high_priority": 3,
@@ -70,6 +70,6 @@
       }
     }
   ],
-  "programs_updated_at": 1757893881,
-  "programs_updated_at_iso": "2025-09-14T23:51:21Z"
+  "programs_updated_at": 1758196976,
+  "programs_updated_at_iso": "2025-09-18T12:02:56Z"
 }
