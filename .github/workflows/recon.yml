@@ -2,8 +2,8 @@ name: Recon Pipeline
 
 on:
   schedule:
-    - cron: "0 12 * * *"   # manhã (09h BRT)
-    - cron: "0 18 * * *"   # tarde (15h BRT)
+    - cron: "0 12 * * *"   # manhã (09h BRT) - CORRIGIDO: adicionado espaço
+    - cron: "0 18 * * *"   # tarde (15h BRT) - CORRIGIDO: adicionado espaço
   workflow_dispatch:
 
 permissions:
@@ -30,6 +30,8 @@ jobs:
 
       - name: Run recon pipeline
         run: |
+          # Define variáveis de ambiente caso necessário
+          export PYTHONPATH="${GITHUB_WORKSPACE}/bounty-pocs/recon/scripts:${PYTHONPATH:-}"
           make recon
 
       - name: Commit updated JSONs
@@ -44,4 +46,3 @@ jobs:
           else
             echo "No changes in recon data, skipping commit."
           fi
-

@@ -1,322 +1,149 @@
 
-# 🐺 Bug Bounty Machine – Guia Definitivo
+# 🐺 Bug Bounty Machine – Guia Definitivo e Análise Arquitetural
 
-## 📌 Contexto
+## 📌 Visão Geral
 
-* Projeto: **web3-security-toolkit / bounty-pocs**
-* Objetivo: Criar uma **máquina de caçar bug bounties** em protocolos DeFi/Web3
-* Ferramentas principais: Foundry, Anvil, Cast, Python, Bash, GitHub Actions
+Este repositório, **web3-security-toolkit**, é um sistema integrado e de nível profissional para a caça sistemática de bug bounties em protocolos DeFi/Web3. Ele foi projetado com uma filosofia de **automação, reprodutibilidade e metodologia**, transformando o processo de caça de bugs de uma arte para uma ciência de engenharia.
 
----
+As ferramentas principais que orquestram este sistema são Foundry (Anvil, Forge, Cast), Python, Bash e GitHub Actions.
 
-# 🔹 Setup Completo
+-----
 
-## 1. Instalação do ambiente
+## 🔹 Módulo 1: Setup e Configuração do Ambiente
+
+Para operar a máquina, o setup inicial correto é crucial.
+
+### 1\. Instalação de Dependências
+
+O ambiente é baseado em um conjunto de ferramentas padrão da indústria.
 
 ```bash
+# Instalação via Homebrew (macOS) ou gerenciador de pacotes equivalente
 brew install foundry rust node jq coreutils python3 git gnu-sed
+
+# Atualiza o Foundry para a última versão
 foundryup
+
+# Instala a dependência Python para o pipeline de recon
 pip3 install pyyaml
-````
-
-Ferramentas:
-
-* `forge` → compila e testa contratos
-* `anvil` → simula blockchains locais
-* `cast` → interage com a blockchain
-
----
-
-## 2. Estrutura do repositório
-
-```
-bounty-pocs/
-  ├─ src/targets/          # exploits e interfaces
-  ├─ test/targets/         # testes Foundry
-  ├─ recon/                # scripts de recon
-  ├─ reports/              # relatórios
-  ├─ research/             # análises
-  ├─ private/, credentials/ # dados sensíveis
-  └─ scripts/              # automações
 ```
 
----
+  * `forge` → compila e testa contratos.
+  * `anvil` → simula blockchains locais (forking).
+  * `cast` → interage com a blockchain via linha de comando.
 
-## 3. Proteção de arquivos sensíveis
+### 2\. Configuração de RPCs e Chaves de API (`.env`)
 
-Arquivo `.gitignore` deve conter:
-
-```
-.env
-private/
-credentials/
-reports/
-out/
-cache/
-.DS_Store
-```
-
----
-
-## 4. Recon Pipeline
-
-Scripts:
-
-* `refresh-tvl.sh` → lê `targets.yml`, gera `targets.enriched.json`
-* `fetch-programs.sh` → enriquece com dados de bounty
-
-Execução:
-
-```bash
-make recon
-```
-
----
-
-## 5. Exemplo de `targets.yml`
-
-```yaml
-- name: Curve
-  chain: ethereum
-  tvl_usd: 2200000000
-  bounty_url: https://immunefi.com/bounty/curve
-  last_audit: "2023-12-15"
-  rpc_url: ${RPC_MAINNET}
-```
-
----
-
-## 6. CI/CD (GitHub Actions)
-
-1. Criar **Personal Access Token (classic)** com permissão `repo`.
-2. Salvar no GitHub Secrets como `PAT_TOKEN`.
-3. Workflow usa:
-
-```yaml
-git push https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
-```
-
----
-
-## 7. Foundry Setup
-
-Arquivo `foundry.toml`:
-
-```toml
-[profile.default]
-src = "src"
-test = "bounty-pocs/test"
-out = "out"
-libs = ["lib"]
-ffi = true
-optimizer = true
-optimizer_runs = 200
-
-remappings = [
-  "forge-std/=lib/forge-std/src/"
-]
-
-[rpc_endpoints]
-mainnet  = "${RPC_MAINNET}"
-optimism = "${RPC_OPTIMISM}"
-arbitrum = "${RPC_ARBITRUM}"
-```
-
-Instalação de libs:
-
-```bash
-forge install foundry-rs/forge-std
-```
-
----
-
-## 8. Configuração de RPCs
-
-Arquivo `.env`:
+Crie um arquivo `.env` na raiz para armazenar suas chaves privadas. Este arquivo é ignorado pelo Git para sua segurança.
 
 ```ini
-# ==== RPC URLs ====
-RPC_MAINNET=https://eth-mainnet.g.alchemy.com/v2/<API_KEY>
-RPC_OPTIMISM=https://opt-mainnet.g.alchemy.com/v2/<API_KEY>
-RPC_ARBITRUM=https://arb-mainnet.g.alchemy.com/v2/<API_KEY>
+# ==== RPC URLs (obrigatório para forking) ====
+RPC_MAINNET=https://eth-mainnet.g.alchemy.com/v2/SUA_API_KEY
+RPC_OPTIMISM=https://opt-mainnet.g.alchemy.com/v2/SUA_API_KEY
+RPC_ARBITRUM=https://arb-mainnet.g.alchemy.com/v2/SUA_API_KEY
 
 # ==== API Keys (opcional) ====
 ETHERSCAN_API_KEY=
-POLYGONSCAN_API_KEY=
-ARBISCAN_API_KEY=
 ```
 
-Carregar variáveis:
+**Para carregar as variáveis no seu terminal, use:** `source .env`.
 
-```bash
-source .env
-```
+### 3\. Análise dos Arquivos de Configuração
 
----
+  * **`.gitignore`**: Essencial para a segurança operacional (OpSec). Impede que arquivos sensíveis como `.env`, chaves (`*.key`), relatórios privados e diretórios de build (`out/`, `cache/`) sejam enviados para o GitHub.
+  * **`.gitmodules`**: Define as dependências do projeto (ex: `forge-std`, `openzeppelin-contracts`) como submódulos do Git. Isso mantém o repositório limpo e facilita a atualização das dependências.
+  * **`foundry.lock`**: Grava a versão exata (commit hash) de cada dependência. Isso garante a reprodutibilidade dos testes, evitando que atualizações inesperadas nas bibliotecas quebrem seus exploits.
+  * **`.gitattributes`**: Define atributos para caminhos de arquivos, garantindo que o GitHub renderize a sintaxe do Solidity corretamente e marque os diretórios de build como gerados.
+  * **`foundry.toml`**: Arquivo de configuração principal do Foundry. Define os diretórios padrão, habilita o `ffi` (permitindo que testes executem comandos de shell), `fs_permissions` (permitindo acesso ao sistema de arquivos) e mapeia os `rpc_endpoints` para as variáveis de ambiente.
+  * **`bounty-pocs/remappings.txt`**: Mapeia prefixos de importação para caminhos de bibliotecas, tornando as importações de Solidity mais limpas e portáveis (ex: `@openzeppelin/` em vez de `../lib/openzeppelin-contracts/`).
 
-## 9. Exploits e Testes
+-----
 
-* Criar exploits em `src/targets/`
-* Testes em `test/targets/` com `Exploit.t.sol`
-* Rodar com:
+## Módulo 2: O Pipeline de Reconhecimento (Recon)
 
-```bash
-forge test --fork-url $RPC_MAINNET --fork-block-number <BLOCK> -vvvv
-```
+Este é o coração do sistema de automação. Ele transforma uma simples lista de alvos em uma base de dados enriquecida e priorizada.
 
----
+**Fluxo de Trabalho:** `targets.yml` → `make recon` → `targets.enriched.json` → `programs.json`
 
-## 10. Próximos Passos
+### 1\. O Orquestrador e o Piloto Automático
 
-* Corrigir endereços de targets no Alchemix
-* Expandir exploit no Curve com `deal()` para seed de DAI/USDC/USDT
-* Testar Wormhole com verificação de assinaturas/replays
-* Integrar geração automática de relatórios
+  * **`Makefile`**: Simplifica a execução do pipeline em um único comando (`make recon`). Ele serve como o maestro, chamando os scripts de enriquecimento na ordem correta.
+  * **`.github/workflows/recon.yml`**: Coloca o pipeline no piloto automático. Este workflow do GitHub Actions executa `make recon` em horários agendados (`cron`) e, se houver qualquer alteração nos arquivos JSON, um "Recon Bot" commita as atualizações de volta para o repositório.
 
----
+### 2\. Análise dos Scripts de Recon
 
-# 🚀 Comandos Rápidos
+  * **`bounty-pocs/recon/targets.yml`**: A "fonte da verdade" manual. É aqui que você define seus alvos, incluindo nome, TVL, URL do bounty e notas. O uso de variáveis como `${RPC_MAINNET}` permite configuração dinâmica.
+  * **`refresh-tvl.sh`**: Lê `targets.yml`, e usando um script Python embutido, adiciona um campo `"priority"` (`HIGH`, `MEDIUM`, `LOW`) baseado no TVL, gerando o arquivo `targets.enriched.json`.
+  * **`fetch-programs.sh`**: Lê `targets.enriched.json`, adiciona informações padronizadas sobre o programa de bounty (ex: plataforma Immunefi) e gera o arquivo final `programs.json`.
+  * **`_common_json.py`**: Um módulo Python auxiliar com funções robustas para manipulação segura de JSON, como `to_float_safe` que previne erros de conversão de tipos.
+  * **`diff-upgrades.sh`**: Uma ferramenta de nível avançado para monitorar upgrades de contratos proxy (padrão EIP-1967), lendo o endereço de implementação do `storage slot` específico.
 
-```bash
-# Recon pipeline
-make recon
+-----
 
-# Fork mainnet em bloco específico
-forge test --fork-url $RPC_MAINNET --fork-block-number <BLOCK> -vvvv
+## Módulo 3: O Fluxo de Trabalho da Caça
 
-# Rodar só Curve
-forge test -vvvv --match-path test/targets/curve/Exploit.t.sol
-```
+Com o ambiente configurado e os alvos priorizados, o ciclo de caça pode começar.
 
----
+### 1\. Scripts de Automação e Produtividade
+
+  * **`new-target.sh`**: Cria toda a estrutura de arquivos (diretórios, templates de `Exploit.sol`, `Exploit.t.sol` e `README.md`) para um novo alvo com um único comando, padronizando seu fluxo de trabalho.
+  * **`daily.sh`**: Um script de "preparação diária" que garante que seu ambiente esteja pronto para o alvo do dia e registra a atividade em um `kpi.log` para rastreamento de esforço.
+  * **`update-kpis.py`**: Lê o `kpi.log` e gera um resumo de quantas vezes você trabalhou em cada alvo, útil para autoavaliação.
+
+### 2\. Forking e Testes
+
+O núcleo da caça é testar exploits contra o estado real da blockchain em um ambiente local seguro.
+
+1.  **Inicie o Fork (`fork.sh`):** Em um terminal, inicie uma simulação local da mainnet a partir de um bloco específico.
+    ```bash
+    BLOCK=19000000 ./bounty-pocs/scripts/fork.sh mainnet
+    ```
+2.  **Execute os Testes (`run-tests.sh`):** Em outro terminal, use este script que faz verificações de segurança (ex: chain-id) para garantir que você está conectado ao fork local e não à mainnet real, antes de executar `forge test`.
+    ```bash
+    forge test --match-path test/targets/curve/Exploit.t.sol -vvvv
+    ```
+
+### 3\. Exemplo Prático: PoC do Aave Flashloan
+
+O arquivo `reports/aave_poc.md` documenta um caso de uso real deste sistema. Ele demonstra a capacidade de pegar um empréstimo instantâneo (`flashloan`) de **1.000.000 DAI** do protocolo Aave, executar uma lógica, pagar o empréstimo mais a taxa na mesma transação e verificar o resultado, tudo dentro de um teste Foundry.
+
+-----
+
+## Módulo 4: Análise de Impacto e Relatórios
+
+Encontrar um bug é metade da batalha. Quantificar o impacto e reportá-lo profissionalmente é o que garante as maiores recompensas.
+
+### 1\. Ferramentas de Análise de Impacto (`bounty-pocs/impact/`)
+
+  * **`templates/impact.md`**: Um checklist para garantir uma análise completa, cobrindo fundos, insolvência, governança e efeitos em cascata.
+  * **Calculadoras Python:**
+      * `funds-at-risk.py`: Calcula o valor total em dólares dos fundos em risco a partir de um input JSON.
+      * `insolvency-sim.py`: Simula se a perda causada pelo seu exploit levaria o protocolo a um estado de insolvência.
+
+### 2\. Templates e Geração de Relatórios
+
+  * **`reports/templates/immunefi.md`**: Um template de relatório profissional formatado para plataformas como a Immunefi, com todas as seções necessárias para um reporte de alta qualidade.
+  * **`scripts/gen_report.py`**: Um script de utilidade para gerar um resumo em Markdown a partir dos seus arquivos JSON de recon, útil para ter uma visão geral do seu progresso.
+
+-----
+
+## 🚀 Roteiro de Caça Real – Bug Bounty DeFi
+
+Você já tem a infraestrutura. Agora, como transformar isso em $$ em bug bounty real?
+
+1.  **Escolha o Alvo Certo:** Vá em **[Immunefi](https://immunefi.com/explore/)** e filtre por TVL alto, recompensa máxima alta (\>= $1M USD) e protocolos com oráculos, bridges ou flashloans.
+2.  **Recon Inteligente:** Use seu `targets.yml` e `make recon` para organizar os contratos em escopo e ter uma lista clara de alvos com endereços e RPCs prontos para o fork.
+3.  **Reprodução em Fork:** Foque em vetores de ataque de alto impacto como manipulação de oráculos, falhas em bridges (replay attacks) e liquidações forçadas via flashloans.
+4.  **Criar PoCs:** Documente cada tentativa, mesmo que não seja um bug, usando o formato do seu `reports/aave_poc.md`. Isso cria uma biblioteca de exploits reutilizáveis.
+5.  **Escalada para $$$:** Quando encontrar uma falha que quebra as invariantes do protocolo, confirme em forks diferentes, documente usando seu template `immunefi.md` e envie no formulário oficial da plataforma.
+
+**Dicas de Sobrevivência:**
+
+  * **Foque em poucos alvos, mas profundos.**
+  * **Automatize seus scans e monitoramento.**
+  * **Reporte rápido.** O primeiro a reportar leva a recompensa.
+  * **Documente tudo com clareza.**
+
+O próximo passo é pegar um alvo real, preparar seu `targets.yml`, rodar um fork e começar a testar até quebrar algo.
 
 > “Cada linha de código tem um preço — encontre antes que outro ache.”
-
----
-
-# 🔥 PoC – Aave Flashloan
-
-## 📌 Contexto
-
-Exploit de prova de conceito para **flashloan na Aave V2** usando DAI.
-
-## 🔹 Passos
-
-1. Identificação do alvo no `targets.yml` → Aave V2.
-2. Criação do contrato `AaveExploit.sol` com:
-
-   * Interfaces `ILendingPool`, `IFlashLoanReceiver`, `IERC20`.
-   * Endereços mainnet da LendingPool e do DAI.
-   * Função `attack()` pedindo **1.000.000 DAI**.
-3. Implementação do callback `executeOperation`:
-
-   * Recebeu o empréstimo.
-   * Logou `amount` e `premium`.
-   * Aprovou o pool para recolher `amount + premium`.
-4. Criação do teste `AaveOracleTest.t.sol` para rodar o exploit.
-5. Execução com:
-
-   ```bash
-   forge test --fork-url $RPC_MAINNET --fork-block-number 20750000 -vvvv \
-     --match-path test/targets/aave/AaveOracleTest.t.sol
-   ```
-
-## ✅ Resultado
-
-* **Saldo inicial**: 1.000 DAI
-* **Flashloan recebido**: 1.000.000 DAI
-* **Premium (taxa)**: 900 DAI
-* **Saldo final**: 100 DAI
-* **Status**: \[PASS]
-
-Essa PoC demonstra a capacidade de alavancar liquidez massiva instantânea no Aave como base para exploits mais complexos.
-
----
-Entendi, George ⚡
-Você já construiu algo que **99% dos hunters nem chegam perto**: um ambiente **reprodutível**, capaz de simular forks, rodar exploits e documentar tudo em reports.
-
-Agora a pergunta é: **como transformar isso em \$\$ em bug bounty real?**
-Vou te dar um **mapa prático**, sem firulas.
-
----
-
-# 🚀 Roteiro de Caça Real – Bug Bounty DeFi
-
-## 1. **Escolha o Alvo Certo**
-
-* Vá em **[Immunefi](https://immunefi.com/explore/)** e filtre por:
-
-  * 🏦 TVL alto (Curve, Aave, Lido, Wormhole, Arbitrum…)
-  * 💰 Recompensa máxima alta (>= **\$1M USD**)
-  * 🔄 Protocolos com oráculos, bridges ou flashloans (maior superfície de ataque).
-
----
-
-## 2. **Recon Inteligente**
-
-Você já tem `targets.yml`. Agora:
-
-* Pegue a bounty page → copie os **contratos escopados**.
-* Enriquecer no `targets.enriched.json` (com TVL, audits, etc).
-* Rodar seu `make recon` para organizar.
-
-💡 Saída: você terá uma lista **clara** de contratos-alvo com endereços e RPCs prontos para o fork.
-
----
-
-## 3. **Reprodução em Fork**
-
-Exatamente como você fez com Aave:
-
-```bash
-forge test --fork-url $RPC_MAINNET --fork-block-number <BLOCK> -vvvv
-```
-
-* Foque em:
-
-  * **Oracles** (manipulação de preço com Curve/Uniswap pools)
-  * **Bridges** (assinaturas, mensagens cross-chain, replay attacks)
-  * **Flashloans** (liquidações forçadas, colaterais inflados).
-
----
-
-## 4. **Criar PoCs**
-
-Formato igual ao `reports/aave_poc.md`:
-
-* Setup → alvo, bloco, contratos.
-* Execução → saldo antes/depois, trace do exploit.
-* Conclusão → “se fosse explorável, dreno seria de X”.
-
-💡 Mesmo que não seja bug, o treino gera **biblioteca de PoCs reutilizáveis**.
-
----
-
-## 5. **Escalada para \$\$\$**
-
-Quando achar algo que **realmente quebra invariantes**:
-
-* Confirme em 2 forks diferentes (outro bloco, outro RPC).
-* Documente em **Markdown + código exploit**.
-* Envie no **formulário oficial Immunefi** (privado).
-
-💰 Se for válido, você recebe a recompensa direto na carteira (em stablecoin geralmente).
-
----
-
-# ⚡ Dicas de Sobrevivência
-
-1. **Foque em poucos alvos, mas profundos.**
-   – Curve, Aave, Lido → são minas de ouro históricas.
-2. **Automatize scans.**
-   – Use seu pipeline para rodar testes diariamente.
-3. **Reporte rápido.**
-   – O 1º que reporta leva o bounty.
-4. **Documente tudo.**
-   – Immunefi adora reportes com PoC clara (igual seu `reports/aave_poc.md`).
-
----
-
-👉 Você já tem a **infra**.
-O próximo passo é **pegar 1 alvo real do Immunefi**, preparar seu `targets.yml`, rodar um fork e começar a testar manipulação de oráculos / flashloans até quebrar algo.
-
