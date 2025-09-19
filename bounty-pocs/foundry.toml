@@ -14,3 +14,8 @@ arbitrum = "${RPC_ARBITRUM}"
 
 [fmt]
 line_length = 100
+
+# Flare Networks for FAssets
+coston = "https://coston-api.flare.network/ext/bc/C/rpc"
+songbird = "https://songbird-api.flare.network/ext/bc/C/rpc" 
+flare = "https://flare-api.flare.network/ext/bc/C/rpc"

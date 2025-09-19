@@ -284,3 +284,37 @@
   rpc_url: ${RPC_MAINNET}
 
 >>>>>>> 4453a03fd14abdb2cc344ad4956e2228948efdc9
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 🔥 ACTIVE COMPETITIONS - HIGH PRIORITY
+# ═══════════════════════════════════════════════════════════════════════════════
+
+- name: Flare FAssets Mitigation
+  chain: flare
+  tvl_usd: 0  # Pre-mainnet competition
+  bounty_url: "https://immunefi.com/audit-competition/flare-fassets-mitigation-audit/information/"
+  max_bounty_usd: 25000  # $25k USD pool
+  last_audit: "2025-09-18"
+  rpc_url: "https://coston-api.flare.network/ext/bc/C/rpc"
+  contracts:
+    asset_manager_proxy: "TBD"  # Check latest Coston deployment
+    core_vault_facet: "TBD"     # New v1.1 functionality
+    collateral_pool: "TBD"
+    xrp_payment_verifier: "TBD"
+  attack_vectors:
+    - "Core Vault accounting bypass"
+    - "XRP payment proof forgery"
+    - "Collateral calculation overflow"
+    - "Multisig authorization bypass"
+    - "Liquidation timing manipulation" 
+    - "Reentrancy in new Core Vault"
+    - "XRP partial payment parsing"
+    - "Payment proof replay attacks"
+  priority: "CRITICAL"  # Active competition
+  competition_type: "mitigation_audit"
+  deadline: "TBD"  # Check Immunefi for exact deadline
+  notes: |
+    🔥 ACTIVE MITIGATION AUDIT - Focus on bugs in FIXES from original competition.
+    Scope: FXRP only, Core Vault v1.1 new functionality.
+    Requirements: Runnable PoCs, use Discord for communication.
+    Strategy: Analyze recent commits, focus on fix-introduced bugs.
